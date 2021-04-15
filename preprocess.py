@@ -2,31 +2,63 @@
 import pandas as pd
 import numpy
 import joblib
+import torch
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
 
+import utils
 from config import *
 
 def preprocess(args):
-    
-    params = args.type if args.type is not None else data_types
+    column_nums = []
+    if args.close:
+        # close_logに対応するcolumn番号を追加
+        column_nums.extend([8,12,16,20])
 
-    for param in params:
-        train_df = pd.read_csv('./data/train.csv')
-        train_df.std(ddof=0)
-        dataset = []
-        tmp_list = []
-        for df_date,df_data in zip(train_df['Date'],train_df[param+'_Close_log']):
-            tmp_list.append([df_date,df_data])
-            # 60分x24時間x３日で4320
-            if len(tmp_list) == 4320:
-                dataset.append(tmp_list)
-                tmp_list = []
+    scaler = MinMaxScaler(feature_range=(-1, 1))
 
-        joblib.dump(dataset, './data/'+param+'.pkl.cmp', compress=True)
+    df = pd.read_csv(args.path)
+    for column_num in column_nums:
+        df = df[df_columns[column_num]]
+        all_data = df.values.astype(float)
+
+        # 予測問題なのでtestデータは最後の日にちになるようにランダムには取らない
+        train_data = all_data[:-times]
+        test_data = all_data[-times:]
+
+        train_data_normalized = scaler.fit_transform(train_data.reshape(-1, 1))
+        train_data_normalized = torch.FloatTensor(train_data_normalized).view(-1)
+        train_inout_seq = create_inout_sequences(input_data, times)
+
+        joblib.dump(dataset, './data/'+df_columns[column_num]+'.pkl.cmp', compress=True)
                 
+def create_inout_sequences(input_data, sl):
+    """trainに対応するシーケンスデータに対応するラベルを作成する関数
+
+    Parameters
+    ----------
+    input_data : numpy.array
+        trainデータとなるシーケンスデータ
+    sl : int
+        sequence length:シーケンスデータ１つ分の長さ
+
+    Returns
+    -------
+    list
+        trainデータのラベル
+    """
+    inout_seq = []
+    L = len(input_data)
+    for i in range(L-tw):
+        train_seq = input_data[i:i+tw]
+        train_label = input_data[i+tw:i+tw+1]
+        inout_seq.append((train_seq ,train_label))
+    return inout_seq
         
 if __name__=='__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--type',nargs='*')
+    parser.add_argument('-c','--close',action='store_true')
+    parser.add_argument('-p','--path',required=True)
     args = parser.parse_args()
     preprocess(args)
