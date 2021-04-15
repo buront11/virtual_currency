@@ -14,13 +14,13 @@ def date_data_plot(csv_path):
 
     # df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m")
 
-    # columsの先頭は必ずDateなのでそれ以外をloop
-    colums = df.columns[1:]
+    # columnsの先頭は必ずDateなのでそれ以外をloop
+    columns = df.columnns[1:]
 
-    for colum in colums:
+    for column in columns:
         # 描画
         fig, ax = plt.subplots(figsize=(8, 4))
-        ax.plot(df["Date"], df[colum])
+        ax.plot(df["Date"], df[column])
 
         locator = mdates.MonthLocator(bymonthday=None, interval=6, tz=None)
         # 軸目盛の設定
@@ -34,8 +34,8 @@ def date_data_plot(csv_path):
         # 軸目盛ラベルの回転
         labels = ax.get_xticklabels()
         plt.setp(labels, rotation=0, fontsize=10);
-        plt.savefig('./plot/'+colum+'.png')
-        print('finished {}'.format(colum))
+        plt.savefig('./plot/'+column+'.png')
+        print('finished {}'.format(column))
 
         ax.grid()
         plt.clf()
