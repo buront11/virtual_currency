@@ -28,10 +28,13 @@ def preprocess(args):
 
         train_data_normalized = scaler.fit_transform(train_data.reshape(-1, 1))
         train_data_normalized = torch.FloatTensor(train_data_normalized).view(-1)
-        train_inout_seq = create_inout_sequences(input_data, times)
+        train_inout_seq = create_inout_sequences(train_data_normalized, times)
+        
+        # save train data
+        joblib.dump(train_inout_seq, './data/'+df_columns[column_num]+'.pkl.cmp', compress=True)
+        # save test data
+        joblib.dump(test_data, './data/'+df_columns[column_num]+'.pkl.cmp', compress=True)
 
-        joblib.dump(dataset, './data/'+df_columns[column_num]+'.pkl.cmp', compress=True)
-                
 def create_inout_sequences(input_data, sl):
     """trainに対応するシーケンスデータに対応するラベルを作成する関数
 
@@ -49,9 +52,9 @@ def create_inout_sequences(input_data, sl):
     """
     inout_seq = []
     L = len(input_data)
-    for i in range(L-tw):
-        train_seq = input_data[i:i+tw]
-        train_label = input_data[i+tw:i+tw+1]
+    for i in range(L-sl):
+        train_seq = input_data[i:i+sl]
+        train_label = input_data[i+sl:i+sl+1]
         inout_seq.append((train_seq ,train_label))
     return inout_seq
         
