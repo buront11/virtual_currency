@@ -1,0 +1,1 @@
+data_types = ['ETHUSD','ZECUSD','LTCUSD','BTCUSD']
